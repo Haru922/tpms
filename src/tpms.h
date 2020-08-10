@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define TPMS_VERSION  "0.0.1"
-#define TPMS_BUF_SIZE 256
+#define TPMS_VERSION       "0.0.1"
+#define LSF_PASSPHRASE_DIR "/var/tmp/lsf/.passphrase"
 
 typedef enum {
   TPMS_OPT_INSERT,

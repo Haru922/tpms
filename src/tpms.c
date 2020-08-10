@@ -25,7 +25,7 @@ int tpms_insert (char *dbus_name) {
   int ma = 0;
   int ms = 0;
   FILE *fp = NULL;
-  char passphrase_file[TPMS_BUF_SIZE];
+  char passphrase_file[BUFSIZ];
 
   json_object_object_get_ex (whitelist_obj, "policy", &iter_obj);
   for (i = 0; i < json_object_array_length (iter_obj); i++) {
@@ -39,7 +39,7 @@ int tpms_insert (char *dbus_name) {
 
   if (!tpms_value[TPMS_FIELD_DISPLAY_NAME]) {
     md = 1;
-    tpms_value[TPMS_FIELD_DISPLAY_NAME] = (char *) malloc (sizeof (char) * TPMS_BUF_SIZE);
+    tpms_value[TPMS_FIELD_DISPLAY_NAME] = (char *) malloc (sizeof (char) * BUFSIZ);
     for (i = 0, j = 0; dbus_name[i]; i++) {
       if (dbus_name[i] == '.')
         j = 0;
@@ -51,18 +51,21 @@ int tpms_insert (char *dbus_name) {
 
   if (!tpms_value[TPMS_FIELD_ABS_PATH]) {
     ma = 1;
-    tpms_value[TPMS_FIELD_ABS_PATH] = (char *) malloc (sizeof (char) * TPMS_BUF_SIZE);
-    snprintf (tpms_value[TPMS_FIELD_ABS_PATH], TPMS_BUF_SIZE, "/usr/bin/%s", tpms_value[TPMS_FIELD_DISPLAY_NAME]);
+    tpms_value[TPMS_FIELD_ABS_PATH] = (char *) malloc (sizeof (char) * BUFSIZ);
+    snprintf (tpms_value[TPMS_FIELD_ABS_PATH], BUFSIZ, "/usr/bin/%s", tpms_value[TPMS_FIELD_DISPLAY_NAME]);
   }
 
   if (!tpms_value[TPMS_FIELD_START_CMD]) {
     ms = 1;
-    tpms_value[TPMS_FIELD_START_CMD] = (char *) malloc (sizeof (char) * TPMS_BUF_SIZE);
-    snprintf (tpms_value[TPMS_FIELD_START_CMD], TPMS_BUF_SIZE, "/usr/bin/%s", tpms_value[TPMS_FIELD_DISPLAY_NAME]);
+    tpms_value[TPMS_FIELD_START_CMD] = (char *) malloc (sizeof (char) * BUFSIZ);
+    snprintf (tpms_value[TPMS_FIELD_START_CMD], BUFSIZ, "/usr/bin/%s", tpms_value[TPMS_FIELD_DISPLAY_NAME]);
   }
 
+  if (access (LSF_PASSPHRASE_DIR, F_OK))
+    mkdir (LSF_PASSPHRASE_DIR, S_IRUSR | S_IWUSR | S_IXUSR);
+
   lsf_generate_encrypted_rsa_key (&tpms_value[TPMS_FIELD_PUBLIC_KEY], &tpms_value[TPMS_FIELD_PRIVATE_KEY], &passphrase);
-  snprintf (passphrase_file, TPMS_BUF_SIZE, "/var/tmp/lsf/passphrase/%s.passphrase", dbus_name);
+  snprintf (passphrase_file, BUFSIZ, "%s/%s.passphrase", LSF_PASSPHRASE_DIR, dbus_name);
   fp = fopen (passphrase_file, "w");
   fprintf (fp, "%s", passphrase);
   fclose (fp);
@@ -116,7 +119,7 @@ int tpms_delete (char *dbus_name) {
   struct json_object *target_obj;
   struct json_object *new_policy;
   struct json_object *new_pubset;
-  char passphrase_file[TPMS_BUF_SIZE];
+  char passphrase_file[BUFSIZ];
   int cnt;
   int i;
   int exist = 0;
@@ -170,7 +173,7 @@ int tpms_delete (char *dbus_name) {
   json_object_object_del (public_key_obj, "policy");
   json_object_object_add (public_key_obj, "policy", new_pubset);
 
-  snprintf (passphrase_file, TPMS_BUF_SIZE, "/var/tmp/lsf/passphrase/%s.passphrase", dbus_name);
+  snprintf (passphrase_file, BUFSIZ, "%s/%s.passphrase", LSF_PASSPHRASE_DIR, dbus_name);
   remove (passphrase_file);
 
   return 0;

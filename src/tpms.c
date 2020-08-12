@@ -65,7 +65,7 @@ int tpms_insert (char *dbus_name) {
     mkdir (LSF_PASSPHRASE_DIR, S_IRUSR | S_IWUSR | S_IXUSR);
 
   lsf_generate_encrypted_rsa_key (&tpms_value[TPMS_FIELD_PUBLIC_KEY], &tpms_value[TPMS_FIELD_PRIVATE_KEY], &passphrase);
-  snprintf (passphrase_file, BUFSIZ, "%s/%s.passphrase", LSF_PASSPHRASE_DIR, dbus_name);
+  snprintf (passphrase_file, BUFSIZ, "%s/%s", LSF_PASSPHRASE_DIR, dbus_name);
   fp = fopen (passphrase_file, "w");
   fprintf (fp, "%s", passphrase);
   fclose (fp);
@@ -173,11 +173,30 @@ int tpms_delete (char *dbus_name) {
   json_object_object_del (public_key_obj, "policy");
   json_object_object_add (public_key_obj, "policy", new_pubset);
 
-  snprintf (passphrase_file, BUFSIZ, "%s/%s.passphrase", LSF_PASSPHRASE_DIR, dbus_name);
+  snprintf (passphrase_file, BUFSIZ, "%s/%s", LSF_PASSPHRASE_DIR, dbus_name);
   remove (passphrase_file);
 
   return 0;
 }
+
+int tpms_get (char *dbus_name) {
+  FILE *fp = NULL;
+  char passphrase_file[BUFSIZ] = { 0, };
+  char passphrase[BUFSIZ] = { 0, };
+
+  snprintf (passphrase_file, BUFSIZ, "%s/%s", LSF_PASSPHRASE_DIR, dbus_name);
+  if (access (passphrase_file, F_OK)) {
+    fprintf (stdout, "Cannot Get passphrase (%s)\n", dbus_name);
+    return -1;
+  } else {
+    fp = fopen (passphrase_file, "r");
+    fgets (passphrase, BUFSIZ, fp);
+    fprintf (stdout, "passphrase: %s\n", passphrase);
+    fclose (fp);
+  }
+  return 0;
+}
+
 
 int tpms_update (char *dbus_name) {
   tpms_delete (dbus_name);
@@ -189,7 +208,8 @@ void tpms_usage (void) {
   fprintf (stdout, "commands:\n");
   fprintf (stdout, "  insert - Insert new security app to policy\n");
   fprintf (stdout, "  delete - Delete security app from policy\n");
-  fprintf (stdout, "  update - Update security app policy\n\n");
+  fprintf (stdout, "  update - Update security app policy\n");
+  fprintf (stdout, "  get    - Get security app passphrase\n\n");
   fprintf (stdout, "options:\n");
   fprintf (stdout, "  -h, --help         Help\n");
   fprintf (stdout, "  -p, --permission   App permission\n");
@@ -266,6 +286,11 @@ int main (int argc, char *argv[]) {
       fprintf (stdout, "** Cannot Update %s **\n", argv[i]);
     else
       tpms_update (argv[i]);
+  } else if (!strcmp (argv[1], "get")) {
+    if (is_lsf_modules (argv[i]))
+      fprintf (stdout, "** Cannot Get passphrase (%s) **\n", argv[i]);
+    else
+      tpms_get (argv[i]);
   } else {
     tpms_usage ();
     exit (EXIT_FAILURE);

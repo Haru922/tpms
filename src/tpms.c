@@ -257,11 +257,13 @@ int main (int argc, char *argv[]) {
         tpms_value[TPMS_FIELD_ABS_PATH] = argv[(i++)+1];
       else if (!strcmp (argv[i], "-e") || !strcmp (argv[i], "--exp"))
         tpms_value[TPMS_FIELD_EXP] = argv[(i++)+1];
+      else if (!strcmp (argv[i], "-l") || !strcmp (argv[i], "--launch-cmd"))
+        tpms_value[TPMS_FIELD_START_CMD] = argv[(i++)+1];
       else if (!strcmp (argv[i], "-k") || !strcmp (argv[i], "--kill-cmd"))
         tpms_value[TPMS_FIELD_STOP_CMD] = argv[(i++)+1];
       else if (!strcmp (argv[i], "-f") || !strcmp (argv[i], "--file"))
         whitelist_file = argv[(i++)+1];
-      else if (!strcmp (argv[i], "-h") || !strcmp (argv[i], "--help")) {
+      else {
         tpms_usage ();
         exit (EXIT_SUCCESS);
       }
